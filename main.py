@@ -77,7 +77,7 @@ class ExecutionPlan:
         self.plan = ExecutionPlan.from_schedule(schedule)
 
     def cost(self):
-        return max(sum(time for time, op in machine) for machine in self.plan)
+        return max(machine[-1][0] + machine[-1][1].time for machine in self.plan)
 
     # basic check for constraints
     def has_collisions(self):

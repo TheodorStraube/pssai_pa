@@ -9,9 +9,6 @@ def schedule_to_gantt(schedule, jobs):
         for op in job.operations:
             job_by_op[op] = str(job)
 
-
-    print('Size', len(schedule), len(schedule[0]))
-
     for n, machines_plan in enumerate(schedule):
         for start, operation in machines_plan:
             data.append({

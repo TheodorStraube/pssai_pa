@@ -4,16 +4,11 @@ import random
 def schedule_to_gantt(schedule, jobs):
     data = []
 
-    job_by_op = dict()
-    for job in jobs:
-        for op in job.operations:
-            job_by_op[op] = str(job)
-
     for n, machines_plan in enumerate(schedule):
-        for start, operation in machines_plan:
+        for start, operation, job in machines_plan:
             data.append({
                 'Task': 'Machine {}'.format(n),
-                'Resource': str(job_by_op[operation]),
+                'Resource': str(job),
                 'Start': start,
                 'Finish': start + operation.time
              })

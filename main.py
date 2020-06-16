@@ -1,7 +1,7 @@
 import copy
 
 from collections import defaultdict
-
+from itertools import permutations
 
 from utils import n_pairs
 from visual import schedule_to_gantt
@@ -85,18 +85,16 @@ class SchedulingSolution:
 
     # its faster to check for deadlock later
     def get_operations(self):
-        return [(a, b, c, d)
-                for a, a_rest in enumerate(self.machines_plans)
-                for b, b_rest in enumerate(a_rest)
-                for c, c_rest in enumerate(self.machines_plans)
-                for d in range(len(c_rest))]
+        return [(machine, a, b)
+                for machine, machines_ops in enumerate(self.machines_plans)
+                for a, b in permutations(range(len(machines_ops)), r=2)]
 
     def apply(self, operation):
-        n_plan_a, n_a, n_plan_b, n_b = operation
+        machine, a, b = operation
         plans_mod = copy.deepcopy(self.machines_plans)
 
-        value = plans_mod[n_plan_a].pop(n_a)
-        plans_mod[n_plan_b].insert(n_b, value)
+        value = plans_mod[machine].pop(a)
+        plans_mod[machine].insert(b, value)
 
         return SchedulingSolution(plans_mod, self.nr_jobs)
 

@@ -8,7 +8,7 @@ from visual import schedule_to_gantt
 
 
 INITIAL_TEMPERATURE = 1
-FROZEN_TEMPERATURE = 0.1
+FROZEN_TEMPERATURE = 0.175
 
 COOLING_RATIO = 0.01
 
@@ -77,7 +77,8 @@ def run(initial_configuration):
             temperature = INITIAL_TEMPERATURE * math.exp(- j * COOLING_RATIO)
 
             #print('T = {} score = {}'.format(temperature, my_score))
-    except:
+    except KeyboardInterrupt:
+        # display the latest solution when stopped
         pass
     return config
 

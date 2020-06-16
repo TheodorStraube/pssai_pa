@@ -7,15 +7,15 @@ from main import ExecutionPlan, SchedulingProblem, SchedulingSolution
 from visual import schedule_to_gantt
 
 
-INITIAL_TEMPERATURE = 1
+INITIAL_TEMPERATURE = 10
 FROZEN_TEMPERATURE = 0.175
 
 COOLING_RATIO = 0.01
 
-NUMBER_OF_ITERATIONS = 2000
+NUMBER_OF_ITERATIONS = 10000
 
 # for this problem only, sum of all times
-NOT_FEASABLE_SCORE = 7773
+not_feasable_score = 7773
 
 
 prob = SchedulingProblem.from_file('test_problem_1.txt')
@@ -38,8 +38,10 @@ def run(initial_configuration):
 
     config = initial_configuration
 
-    last_score = NOT_FEASABLE_SCORE
-    last_increase = None
+    last_score = not_feasable_score
+
+    best_solution = None
+    best_score = not_feasable_score
 
     try:
 
@@ -56,10 +58,14 @@ def run(initial_configuration):
                 neighbor = config.apply(chosen)
                 neighbor_exe = ExecutionPlan(neighbor)
                 neighbor_score = neighbor_exe.cost()
-                neighbor_score = (neighbor_score if neighbor_score != -1 else NOT_FEASABLE_SCORE)
+                neighbor_score = (neighbor_score if neighbor_score != -1 else not_feasable_score)
 
                 my_score = ExecutionPlan(config).cost()
-                my_score = (my_score if my_score != -1 else NOT_FEASABLE_SCORE)
+                my_score = (my_score if my_score != -1 else not_feasable_score)
+
+                if my_score < best_score:
+                    best_solution = config
+                    best_score = my_score
 
                 delta_eval = neighbor_score - my_score
 
@@ -80,7 +86,7 @@ def run(initial_configuration):
     except KeyboardInterrupt:
         # display the latest solution when stopped
         pass
-    return config
+    return best_solution
 
 initial_plan = SchedulingSolution.generate_initial(prob)
 best = run(initial_plan)

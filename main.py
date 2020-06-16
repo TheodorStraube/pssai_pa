@@ -72,8 +72,8 @@ class SchedulingSolution:
 
     def get_operations(self):
         ops = set()
+
         for n_plan_a, plan in enumerate(self.machines_plans):
-            print(len(ops))
             for n_a, (job_a, operation_a) in enumerate(plan):
                 for n_plan_b, plan_b in enumerate(self.machines_plans):
                     for n_b, (job_b, operation_b) in enumerate(plan_b):
@@ -81,8 +81,15 @@ class SchedulingSolution:
                             # insert op_a before op_b
                             if job_a != job_b or job_a.operations.index(operation_a) > job_a.operations.index(operation_b) and not (n_a != n_b + 1 and n_plan_a == n_plan_b):
                                 ops.add((n_plan_a, n_a, n_plan_b, n_b))
-                                return ops
         return ops
+
+    # its faster to check for deadlock later
+    def get_operations(self):
+        return [(a, b, c, d)
+                for a, a_rest in enumerate(self.machines_plans)
+                for b, b_rest in enumerate(a_rest)
+                for c, c_rest in enumerate(self.machines_plans)
+                for d in range(len(c_rest))]
 
     def apply(self, operation):
         n_plan_a, n_a, n_plan_b, n_b = operation
@@ -113,7 +120,9 @@ class ExecutionPlan:
         self.plan = ExecutionPlan.from_schedule(schedule)
 
     def cost(self):
-        return max(machine[-1][0] + machine[-1][1].time for machine in self.plan)
+        if not self.plan or self.has_collisions():
+            return -1
+        return max((machine[-1][0] + machine[-1][1].time) if machine else 0 for machine in self.plan)
 
     # basic check for constraints
     def has_collisions(self):
@@ -168,6 +177,7 @@ class ExecutionPlan:
                     # TODO: +1 on time?
                     memory[job] = (next_op + 1, start_time + operation.time)
                     changed = True
-
             is_done = not changed
-        return plan
+
+        is_done = all(len(p) == len(s) for p, s in zip(plan, schedule.machines_plans))
+        return plan if is_done else []

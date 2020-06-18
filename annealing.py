@@ -8,17 +8,12 @@ from visual import schedule_to_gantt
 
 
 INITIAL_TEMPERATURE = 10
-FROZEN_TEMPERATURE = 0.175
+FROZEN_TEMPERATURE = 0.2
 
-COOLING_RATIO = 0.01
+COOLING_RATIO = 0.1
 
-NUMBER_OF_ITERATIONS = 10000
+NUMBER_OF_ITERATIONS = 100
 
-# for this problem only, sum of all times
-not_feasable_score = 7773
-
-
-prob = SchedulingProblem.from_file('test_problem_1.txt')
 
 def cost_lt(a, b):
     if a == b or a == -1:
@@ -37,6 +32,8 @@ def random_take(delta_eval, temperature):
 def run(initial_configuration):
 
     config = initial_configuration
+
+    not_feasable_score = sum(op.time for machine in config.machines_plans for (_, op) in machine)
 
     last_score = not_feasable_score
 
@@ -88,8 +85,11 @@ def run(initial_configuration):
         pass
     return best_solution
 
-initial_plan = SchedulingSolution.generate_initial(prob)
+problems = SchedulingProblem.from_seed_file()
+
+problem = problems['ta01']
+initial_plan = SchedulingSolution.generate_initial(problem)
 best = run(initial_plan)
 
 execution = ExecutionPlan(best)
-schedule_to_gantt(execution.plan, prob.jobs)
+schedule_to_gantt(execution.plan, problem.jobs)

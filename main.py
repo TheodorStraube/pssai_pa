@@ -3,13 +3,13 @@ import copy
 from collections import defaultdict
 from itertools import permutations
 
-from utils import n_pairs
+from utils import n_pairs, load_seeds, generate_job_shop
 from visual import schedule_to_gantt
 
 class SchedulingProblem:
     def __init__(self, jobs, nr_machines=None):
         self.jobs = jobs
-        self.nr_machines = int(nr_machines) or len(jobs)
+        self.nr_machines = len(jobs)
 
     def __str__(self):
         lines = []
@@ -34,6 +34,17 @@ class SchedulingProblem:
         
         return SchedulingProblem(jobs, nr_machines=nr_machines)
 
+    @staticmethod
+    def from_seed_file(filename='job_seeds.txt'):
+        seed_data = load_seeds(filename=filename)
+        job_shops = {name: generate_job_shop(*values) for name, values in seed_data.items()}
+
+        job_shops = {name: SchedulingProblem([Job([Operation(m - 1, t) for m, t in zip(machines, times)])
+                        for machines, times in zip(*values)]) 
+                        for name, values in job_shops.items()}
+        return job_shops
+
+
 
 class Job:
     def __init__(self, operations):
@@ -42,9 +53,19 @@ class Job:
     def __iter__(self):
         return iter(self.operations)
 
+    def __hash__(self):
+        return hash(tuple(self.operations))
+
+    def __eq__(self, other):
+        if not isinstance(other, Job):
+            return False
+
+        return hash(self) == hash(other)
+
+    """
     def __str__(self):
         return 'Job --> {}'.format(str(self.operations))
-
+    """
 class Operation:
     def __init__(self, machine, time):
         self.machine = int(machine)
@@ -62,6 +83,9 @@ class Operation:
     def __hash__(self):
         return hash(tuple(self))
 
+    def __gt__(self, other):
+        return tuple(self) > tuple(other)
+
 
 # for every machine, this yields a list of all operations to be done in order
 class SchedulingSolution:
@@ -70,6 +94,7 @@ class SchedulingSolution:
         self.machines_plans = machines_plans
         self.nr_jobs = nr_jobs
 
+    """
     def get_operations(self):
         ops = set()
 
@@ -82,6 +107,7 @@ class SchedulingSolution:
                             if job_a != job_b or job_a.operations.index(operation_a) > job_a.operations.index(operation_b) and not (n_a != n_b + 1 and n_plan_a == n_plan_b):
                                 ops.add((n_plan_a, n_a, n_plan_b, n_b))
         return ops
+    """
 
     # its faster to check for deadlock later
     def get_operations(self):
@@ -179,3 +205,11 @@ class ExecutionPlan:
 
         is_done = all(len(p) == len(s) for p, s in zip(plan, schedule.machines_plans))
         return plan if is_done else []
+
+
+from copy import deepcopy
+o = Operation(1, 13)
+j = Job([o])
+kk = deepcopy(j)
+
+print(hash(j.operations[0]) == hash(kk.operations[0]), hash(kk) == hash(j))

@@ -1,10 +1,9 @@
 import copy
-
 from collections import defaultdict
 from itertools import permutations
 
 from utils import n_pairs, load_seeds, generate_job_shop
-from visual import schedule_to_gantt
+
 
 class SchedulingProblem:
     def __init__(self, jobs, nr_machines=None):
@@ -23,15 +22,15 @@ class SchedulingProblem:
 
     @staticmethod
     def from_file(filename):
-
         with open(filename) as input_file:
             lines = input_file.readlines()
 
             nr_jobs, nr_machines = lines[0].split()
             rest = lines[1:]
 
-            jobs = [Job([Operation(machine, time) for machine, time in n_pairs(line.split())]) for line in rest]                
-        
+            jobs = [Job([Operation(machine, time, n) for n, (machine, time) in enumerate(n_pairs(line.split()))], n) for
+                    n, line in enumerate(rest)]
+
         return SchedulingProblem(jobs, nr_machines=nr_machines)
 
     @staticmethod
@@ -39,22 +38,24 @@ class SchedulingProblem:
         seed_data = load_seeds(filename=filename)
         job_shops = {name: generate_job_shop(*values) for name, values in seed_data.items()}
 
-        job_shops = {name: SchedulingProblem([Job([Operation(m - 1, t) for m, t in zip(machines, times)])
-                        for machines, times in zip(*values)]) 
-                        for name, values in job_shops.items()}
+        job_shops = {name: SchedulingProblem(
+            [Job([Operation(m - 1, t, n) for n, (m, t) in enumerate(zip(machines, times))], job_nr)
+             for job_nr, (machines, times) in enumerate(zip(*values))])
+                     for name, values in job_shops.items()}
         return job_shops
 
 
-
 class Job:
-    def __init__(self, operations):
+
+    def __init__(self, operations, job_nr):
         self.operations = operations
+        self.nr = job_nr
 
     def __iter__(self):
         return iter(self.operations)
 
     def __hash__(self):
-        return hash(tuple(self.operations))
+        return self.nr
 
     def __eq__(self, other):
         if not isinstance(other, Job):
@@ -66,10 +67,13 @@ class Job:
     def __str__(self):
         return 'Job --> {}'.format(str(self.operations))
     """
+
+
 class Operation:
-    def __init__(self, machine, time):
+    def __init__(self, machine, time, index):
         self.machine = int(machine)
         self.time = int(time)
+        self.index = index
 
     def __repr__(self):
         return 'OP [{} - {}]'.format(self.machine, self.time)
@@ -89,7 +93,7 @@ class Operation:
 
 # for every machine, this yields a list of all operations to be done in order
 class SchedulingSolution:
-    
+
     def __init__(self, machines_plans, nr_jobs):
         self.machines_plans = machines_plans
         self.nr_jobs = nr_jobs
@@ -135,8 +139,9 @@ class SchedulingSolution:
 
         for job in scheduling_problem.jobs:
             for operation in job.operations:
-                machines_plans[operation.machine].append((job, operation)) 
+                machines_plans[operation.machine].append((job, operation))
         return SchedulingSolution(machines_plans, len(scheduling_problem.jobs))
+
 
 # a SchedulingSolution mapped to specific times
 class ExecutionPlan:
@@ -162,7 +167,6 @@ class ExecutionPlan:
     # check if every op is started after previous op from same job completed
     def is_ordered(self):
         return False
-
 
     # generate an ExecutionPlan from a SchedulingSolution
     @staticmethod
@@ -190,11 +194,12 @@ class ExecutionPlan:
                     next_op, next_time = memory[job]
 
                     # if next op for this job has not been started or the job is done, handle next machine
-                    if next_op == len(job.operations) or next_op != job.operations.index(operation):
+                    if next_op == len(job.operations) or next_op != operation.index:
                         break
 
                     # starting time is 0 or after the last operation on this machine
-                    machine_ready = 0 if not plan[machine_nr] else plan[machine_nr][-1][0] + plan[machine_nr][-1][1].time
+                    machine_ready = 0 if not plan[machine_nr] else plan[machine_nr][-1][0] + plan[machine_nr][-1][
+                        1].time
                     start_time = max(next_time, machine_ready)
                     plan[machine_nr].append((start_time, operation, job))
 
@@ -205,11 +210,3 @@ class ExecutionPlan:
 
         is_done = all(len(p) == len(s) for p, s in zip(plan, schedule.machines_plans))
         return plan if is_done else []
-
-
-from copy import deepcopy
-o = Operation(1, 13)
-j = Job([o])
-kk = deepcopy(j)
-
-print(hash(j.operations[0]) == hash(kk.operations[0]), hash(kk) == hash(j))

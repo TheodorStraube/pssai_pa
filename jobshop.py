@@ -99,33 +99,20 @@ class SchedulingSolution:
         self.machines_plans = machines_plans
         self.nr_jobs = nr_jobs
 
-    """
-    def get_operations(self):
-        ops = set()
-
-        for n_plan_a, plan in enumerate(self.machines_plans):
-            for n_a, (job_a, operation_a) in enumerate(plan):
-                for n_plan_b, plan_b in enumerate(self.machines_plans):
-                    for n_b, (job_b, operation_b) in enumerate(plan_b):
-                        if operation_a != operation_b:
-                            # insert op_a before op_b
-                            if job_a != job_b or job_a.operations.index(operation_a) > job_a.operations.index(operation_b) and not (n_a != n_b + 1 and n_plan_a == n_plan_b):
-                                ops.add((n_plan_a, n_a, n_plan_b, n_b))
-        return ops
-    """
-#    """
-    # its faster to check for deadlock later
-    def get_operations(self):
+    # generate swaps of any 2 operations
+    # does not check for illegal configurations / deadlocks
+    def get_far_operations(self):
         return [(machine, a, b)
                 for machine, machines_ops in enumerate(self.machines_plans)
                 for a, b in permutations(range(len(machines_ops)), r=2)]
 
-    """
-    def get_operations(self):
+    # generate swaps of 2 operations that immediately follow each other
+    # does not check for illegal configurations / deadlocks
+    def get_near_operations(self):
         return [(machine, a, a+1)
                 for machine, machines_ops in enumerate(self.machines_plans)
                 for a in range(len(machines_ops)-1)]
-#   """
+
     def apply(self, operation):
         machine, a, b = operation
         plans_mod = copy.deepcopy(self.machines_plans)

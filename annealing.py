@@ -1,6 +1,9 @@
 import math
 import random
 import json
+
+import argparse
+
 from tqdm import tqdm, trange
 
 from jobshop import ExecutionPlan, SchedulingProblem, SchedulingSolution
@@ -103,8 +106,20 @@ def run(initial_configuration):
 
 problems = SchedulingProblem.from_seed_file()
 
-problem = problems['ta01']
-problem = SchedulingProblem.from_file('test_problem_1.txt')
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', help='choose from Taillard\'s instances')
+parser.add_argument('-f', help='choose file to load problem from')
+
+#problem = problems['ta01']
+#problem = SchedulingProblem.from_file('test_problem_1.txt')
+
+args  = parser.parse_args()
+
+if 'p' in args:
+    problem = problems[args.p]
+elif 'f' in args:
+    problem = SchedulingProblem.from_file(args.f)
+
 
 initial_plan = (SchedulingSolution.generate_seq_initial(problem) if INITIAL_METHOD == 'seq'
                 else SchedulingSolution.generate_random_initial(problem))
@@ -115,3 +130,4 @@ print('Result cost:', ExecutionPlan(best).cost())
 
 execution = ExecutionPlan(best)
 schedule_to_gantt(execution, problem.jobs)
+ 

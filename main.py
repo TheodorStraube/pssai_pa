@@ -1,4 +1,5 @@
 import copy
+import random
 from collections import defaultdict
 from itertools import permutations
 
@@ -112,13 +113,19 @@ class SchedulingSolution:
                                 ops.add((n_plan_a, n_a, n_plan_b, n_b))
         return ops
     """
-
+#    """
     # its faster to check for deadlock later
     def get_operations(self):
         return [(machine, a, b)
                 for machine, machines_ops in enumerate(self.machines_plans)
                 for a, b in permutations(range(len(machines_ops)), r=2)]
 
+    """
+    def get_operations(self):
+        return [(machine, a, a+1)
+                for machine, machines_ops in enumerate(self.machines_plans)
+                for a in range(len(machines_ops)-1)]
+#   """
     def apply(self, operation):
         machine, a, b = operation
         plans_mod = copy.deepcopy(self.machines_plans)
@@ -134,12 +141,36 @@ class SchedulingSolution:
 
     # schedule by order of jobs --> all operations of job0 first, all of job1, ...
     @staticmethod
-    def generate_initial(scheduling_problem):
+    def generate_seq_initial(scheduling_problem):
         machines_plans = [[] for _ in range(scheduling_problem.nr_machines)]
 
         for job in scheduling_problem.jobs:
             for operation in job.operations:
                 machines_plans[operation.machine].append((job, operation))
+        return SchedulingSolution(machines_plans, len(scheduling_problem.jobs))
+
+    # generate schedule by iteratively adding random valid operations
+    @staticmethod
+    def generate_random_initial(scheduling_problem):
+        machines_plans = [[] for _ in range(scheduling_problem.nr_machines)]
+
+        num_jobs = len(scheduling_problem.jobs)
+        # last operation added to the plan for each job
+        last_ops = [-1 for _ in range(num_jobs)]
+        # number of operations per job
+        num_ops = [len(j.operations) for j in scheduling_problem.jobs]
+
+        unfinished_jobs = [ n for n in range(len(scheduling_problem.jobs)) ]
+
+        while len(unfinished_jobs):
+            j = random.sample(unfinished_jobs, 1)[0]
+            if last_ops[j] < (num_ops[j] - 1):
+                job = scheduling_problem.jobs[j]
+                op = job.operations[last_ops[j] + 1]
+                machines_plans[op.machine].append((job, op))
+                last_ops[j] += 1
+            else:
+                unfinished_jobs.remove(j)
         return SchedulingSolution(machines_plans, len(scheduling_problem.jobs))
 
 

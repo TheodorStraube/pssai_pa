@@ -7,10 +7,10 @@ from main import ExecutionPlan, SchedulingProblem, SchedulingSolution
 from visual import schedule_to_gantt
 
 
-INITIAL_TEMPERATURE = 10
+INITIAL_TEMPERATURE = 100
 FROZEN_TEMPERATURE = 0.2
 
-COOLING_RATIO = 0.1
+COOLING_RATIO = 0.05
 
 NUMBER_OF_ITERATIONS = 100
 
@@ -74,7 +74,8 @@ def run(initial_configuration):
                     operations = list(config.get_operations())
 
                 last_increase = (last_score - my_score) / last_score * 100
-                tqdm_status.set_postfix({'score': my_score, 'T': temperature, 'Δ':'{:.3f}%'.format(last_increase or 0)})
+                tqdm_status.set_postfix({'eff': not_feasable_score / (ExecutionPlan(best_solution).cost() * len(config.machines_plans)),
+                                         'score': my_score, 'T': temperature, 'Δ':'{:.3f}%'.format(last_increase or 0)})
             last_score = my_score
             j += 1
             temperature = INITIAL_TEMPERATURE * math.exp(- j * COOLING_RATIO)
@@ -88,7 +89,11 @@ def run(initial_configuration):
 problems = SchedulingProblem.from_seed_file()
 
 problem = problems['ta01']
-initial_plan = SchedulingSolution.generate_initial(problem)
+initial_plan = SchedulingSolution.generate_seq_initial(problem)
+print('Seq cost:', ExecutionPlan(initial_plan).cost())
+print('Random cost:', ExecutionPlan(SchedulingSolution.generate_random_initial(problem)).cost())
+print('Random cost:', ExecutionPlan(SchedulingSolution.generate_random_initial(problem)).cost())
+
 best = run(initial_plan)
 
 execution = ExecutionPlan(best)

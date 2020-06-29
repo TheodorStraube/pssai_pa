@@ -114,4 +114,4 @@ best = run(initial_plan)
 print('Result cost:', ExecutionPlan(best).cost())
 
 execution = ExecutionPlan(best)
-schedule_to_gantt(execution.plan, problem.jobs)
+schedule_to_gantt(execution, problem.jobs)

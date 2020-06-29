@@ -3,6 +3,6 @@
     "frozen_temperature" : 0.2,
     "cooling_ratio" : 0.05,
     "iterations" : 100,
-    "initial_method" : "random",
+    "initial_method" : "trivial",
     "neighbor_method" : "far"
 }

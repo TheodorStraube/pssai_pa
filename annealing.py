@@ -23,12 +23,6 @@ NUMBER_OF_ITERATIONS = params.get('iterations', 100)
 INITIAL_METHOD = params.get('initial_method', 'random')
 NEIGHBOR_METHOD = params.get('neighbor_method', 'near')
 
-print('Initial temperature:', INITIAL_TEMPERATURE)
-print('Frozen temperature:', FROZEN_TEMPERATURE)
-print('Cooling ratio:', COOLING_RATIO)
-print('Iterations:', NUMBER_OF_ITERATIONS)
-print('Method of generating initial solution:', INITIAL_METHOD)
-print('Neighborhood type', NEIGHBOR_METHOD)
 
 def cost_lt(a, b):
     if a == b or a == -1:
@@ -92,7 +86,7 @@ def run(initial_configuration):
                 last_increase = (my_score - last_score) / last_score * 100
                 tqdm_status.set_postfix({'eff': not_feasable_score /
                                          (ExecutionPlan(best_solution).cost() * len(config.machines_plans)),
-                                         'cost': my_score, 'T':'{:.3f}%'.format(temperature),
+                                         'cost': my_score, 'T':'{:.3f}'.format(temperature),
                                          'Δ':'{:+.3f}'.format(last_increase or 0)})
             last_score = my_score
             j += 1
@@ -110,19 +104,25 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-p', help='choose from Taillard\'s instances')
 parser.add_argument('-f', help='choose file to load problem from')
 
-#problem = problems['ta01']
-#problem = SchedulingProblem.from_file('test_problem_1.txt')
 
 args  = parser.parse_args()
 
-if 'p' in args:
+if args.p:
     problem = problems[args.p]
-elif 'f' in args:
+elif args.f:
     problem = SchedulingProblem.from_file(args.f)
 
+print('Problem has {} machines and {} jobs.'.format(problem.nr_machines, len(problem.jobs)))
+print('Initial temperature:', INITIAL_TEMPERATURE)
+print('Frozen temperature:', FROZEN_TEMPERATURE)
+print('Cooling ratio:', COOLING_RATIO)
+print('Iterations:', NUMBER_OF_ITERATIONS)
+print('Method of generating initial solution:', INITIAL_METHOD)
+print('Neighborhood type:', NEIGHBOR_METHOD)
 
-initial_plan = (SchedulingSolution.generate_seq_initial(problem) if INITIAL_METHOD == 'seq'
-                else SchedulingSolution.generate_random_initial(problem))
+initial_plan = (
+    SchedulingSolution.generate_seq_initial(problem) if INITIAL_METHOD == 'trivial'
+    else SchedulingSolution.generate_random_initial(problem))
 
 print('Initial cost:', ExecutionPlan(initial_plan).cost())
 best = run(initial_plan)

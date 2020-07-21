@@ -1,4 +1,13 @@
-Parameters:  
+# Usage:
+(pip install -r requirements.txt)
+python annealing.py [-h -p -f]
+
+-h, --help  show help message and exit
+-p          choose from Taillard's instances
+-f          choose file to load problem from
+
+
+# Parameters:  
 initial_temperature - Initial temperature for simulated annealing  
 frozen_temperature - Abort temperature for simulated annaeling  
 cooling_ratio - Rate of temperature decrease  

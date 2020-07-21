@@ -1,6 +1,7 @@
 import math
 import random
 import json
+import sys
 
 import argparse
 
@@ -9,6 +10,8 @@ from tqdm import tqdm, trange
 from jobshop import ExecutionPlan, SchedulingProblem, SchedulingSolution
 
 from visual import schedule_to_gantt
+
+
 
 
 params = {}
@@ -101,9 +104,8 @@ def run(initial_configuration):
 problems = SchedulingProblem.from_seed_file()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-p', help='choose from Taillard\'s instances')
+parser.add_argument('-p', help='choose from Taillard\'s instances: [ta01 - ta80]',)
 parser.add_argument('-f', help='choose file to load problem from')
-
 
 args  = parser.parse_args()
 
@@ -111,6 +113,9 @@ if args.p:
     problem = problems[args.p]
 elif args.f:
     problem = SchedulingProblem.from_file(args.f)
+else:
+    parser.print_help()
+    sys.exit(0)
 
 print('Problem has {} machines and {} jobs.'.format(problem.nr_machines, len(problem.jobs)))
 print('Initial temperature:', INITIAL_TEMPERATURE)
